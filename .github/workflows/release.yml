@@ -1,0 +1,115 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  DOTNET_NOLOGO: 1
+
+jobs:
+  build:
+    name: 构建 ${{ matrix.flavor }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - flavor: selfcontained
+            # 自包含 + 单文件 + 裁剪：体积可控、启动快、目标机器不需要装 .NET，作为主力产物
+            extra: '-p:PublishSingleFile=true -p:PublishTrimmed=true -p:InvariantGlobalization=true'
+            optional: false
+
+          - flavor: aot
+            # Native AOT：启动最快、体积最小，但需要 MSVC 工具链和 Windows SDK。
+            # 先标成允许失败，等确认 CI 上真能构建出来再改成硬性要求。
+            extra: '-p:PublishAot=true -p:InvariantGlobalization=true'
+            optional: true
+
+    continue-on-error: ${{ matrix.optional }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: 发布
+        shell: bash
+        run: |
+          version="1.0.0"
+          if [[ "${GITHUB_REF_TYPE:-}" == "tag" ]]; then
+            version="${GITHUB_REF_NAME#v}"
+          fi
+          echo "版本号：$version"
+
+          dotnet publish src/AutoPaper \
+            -c Release \
+            -r win-x64 \
+            --self-contained true \
+            -p:Version="$version" \
+            -o "dist/${{ matrix.flavor }}" \
+            ${{ matrix.extra }}
+
+          ls -la "dist/${{ matrix.flavor }}"
+
+      # 发布前最后一道关：确认打包出来的 exe 真能跑，别把一个坏二进制发出去
+      - name: 确认 exe 能用
+        shell: bash
+        run: |
+          exe="dist/${{ matrix.flavor }}/autopaper.exe"
+          "$exe" version
+          "$exe" check --config examples/config.yaml
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.flavor }}
+          path: dist/${{ matrix.flavor }}/autopaper.exe
+          if-no-files-found: error
+
+  release:
+    name: 建 Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # aot 那一份可能因为 continue-on-error 而缺失，这里按实际存在的目录打包
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: 打包
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          repo="$PWD"
+          mkdir -p out
+
+          for dir in artifacts/*/; do
+            flavor="$(basename "$dir")"
+            zipfile="$repo/out/autopaper-${version}-win-x64-${flavor}.zip"
+            cp README.md "$dir/"
+            (cd "$dir" && zip -r "$zipfile" .)
+          done
+
+          ls -la out
+
+      - name: 创建 Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" out/*.zip \
+            --title "AutoPaper $GITHUB_REF_NAME" \
+            --generate-notes

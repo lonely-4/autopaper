@@ -1,0 +1,29 @@
+# AutoPaper 示例配置
+#
+# 把这个目录里的东西拷到你的配置目录就能直接生效：
+#   Windows      %APPDATA%\AutoPaper\
+#   Linux/macOS  ~/.config/AutoPaper/
+# 也可以直接拿这份跑，不改动任何系统设置：
+#   autopaper check   --config examples/config.yaml
+#   autopaper preview 2026-01-05 --config examples/config.yaml
+
+# 周期性壁纸的循环顺序，默认一周一个循环，对应 wallpapers/ 里的 1.png … 7.png。
+# 数组长度就是循环长度：写 [1, 2, 3] 就是三天一轮；
+# 同一个数字写两次（[1, 1, 2]）表示连着两天用同一张。
+range: [1, 2, 3, 4, 5, 6, 7]
+
+# range 里第一个元素从哪天算起。默认 0001-01-01，那天正好是周一，
+# 所以默认 1=周一 … 7=周日。改成任意一个星期天就变成周日=1。
+rangeStartDay: "0001-01-01"
+
+# 壁纸填充方式：fill（铺满，默认）/ fit（适应）/ stretch（拉伸）/
+# center（居中）/ tile（平铺）/ span（跨屏）
+style: fill
+
+# 指定某天用哪张图，优先级高于上面的周期性壁纸。
+#   "2026-01-01"  只在 2026 年的这天生效
+#   "12-25"       每年这天都生效
+# 路径相对 wallpapers/ 目录，也可以写绝对路径。
+specialDays:
+  "2026-01-01": 2026-01-01.png
+  "12-25": 12-25.png

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>autopaper</AssemblyName>
+    <RootNamespace>AutoPaper</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Version>1.0.0</Version>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <!--
+    发布参数（自包含、单文件、裁剪、AOT）故意不放这里，而是在 .github/workflows/release.yml
+    和 README 的命令行里显式给出。这样 `dotnet build` 保持轻量，也便于一眼看清发布出来的是什么。
+  -->
+
+  <ItemGroup>
+    <PackageReference Include="YamlDotNet" Version="18.1.0" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,13 @@
+# .NET 构建产物
+bin/
+obj/
+dist/
+
+# IDE
+.vs/
+.idea/
+*.user
+*.suo
+
+# 本地试跑产物
+autopaper.log
