@@ -26,7 +26,14 @@ wallpapers/
 
 ## 快速开始
 
-1. 从 [Releases](../../releases) 下载 `autopaper-*-win-x64-selfcontained.zip`，解压出 `autopaper.exe`。
+1. 从 [Releases](../../releases) 下载 zip 并解压出 `autopaper.exe`：
+
+   | 下载 | 大小 | 说明 |
+   | --- | --- | --- |
+   | `autopaper-*-win-x64-aot.zip` | **3.2 MB** | **推荐**，启动最快、体积最小 |
+   | `autopaper-*-win-x64-selfcontained.zip` | 13.8 MB | 兜底，万一 AOT 版在你机器上跑不起来就用这个 |
+
+   两个都是自包含的，**不需要装 .NET 运行时**。
 
 2. 生成配置和壁纸目录：
 
