@@ -122,8 +122,9 @@ public static class Cli
             选项：
               --config <路径>      指定配置文件
                                    （默认先找当前目录的 config.yaml，
-                                     再找 %APPDATA%\AutoPaper\config.yaml；
-                                     Linux/macOS 上则是 ~/.config/AutoPaper/config.yaml）
+                                     再找 ~/.config/AutoPaper/config.yaml；
+                                     所有平台都是这个位置，Windows 上就是
+                                     C:\Users\<你>\.config\AutoPaper\config.yaml）
               --dry-run            apply 只打印结果，不真的换壁纸
               -q, --quiet          apply 只写日志（计划任务用）
               -v, --verbose        输出更详细

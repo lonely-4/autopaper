@@ -116,6 +116,30 @@ check "version 打印版本"  0 "autopaper" "${APP[@]}" version
 check "help 打印用法"     0 "用法"      "${APP[@]}" help
 
 echo
+echo "== 配置目录必须是 <用户目录>/.config/AutoPaper（Windows 上也不例外） =="
+# 这是明确要求过的：不用 %APPDATA%。用 grep 而不是 check，因为要断言"不该出现什么"。
+version_out=$("${APP[@]}" version 2>&1)
+
+if grep -qE 'AppData|Roaming' <<<"$version_out"; then
+  fail=$((fail + 1))
+  echo "FAIL  配置目录不该落在 %APPDATA% 下"
+  printf '%s\n' "$version_out" | sed 's/^/      | /'
+else
+  pass=$((pass + 1))
+  echo "ok    没有用 %APPDATA%"
+fi
+
+# 分隔符在 Windows 上是反斜杠，所以只断言目录结构不写死斜杠
+if grep -qF '.config' <<<"$version_out" && grep -qF 'AutoPaper' <<<"$version_out"; then
+  pass=$((pass + 1))
+  echo "ok    配置目录落在 .config/AutoPaper 下"
+else
+  fail=$((fail + 1))
+  echo "FAIL  配置目录不在 .config/AutoPaper 下"
+  printf '%s\n' "$version_out" | sed 's/^/      | /'
+fi
+
+echo
 echo "== 出错时必须报错并返回 1 =="
 check "配置文件不存在" 1 "找不到配置文件" "${APP[@]}" check --config /definitely/not/here.yaml
 check "日期格式写错"   1 "yyyy-MM-dd"    "${APP[@]}" preview 2026/01/05 --config "$CFG"

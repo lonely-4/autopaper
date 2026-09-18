@@ -41,7 +41,7 @@ wallpapers/
    .\autopaper.exe init
    ```
 
-   它会建好 `%APPDATA%\AutoPaper\config.yaml` 和 `%APPDATA%\AutoPaper\wallpapers\`。
+   它会建好 `C:\Users\<你>\.config\AutoPaper\config.yaml` 和同目录下的 `wallpapers\`。
 
 3. 把图片丢进 `wallpapers\`，按上面的约定命名。
 
@@ -126,10 +126,17 @@ wallpapers/
 
 ## 配置文件
 
-位置：
+位置：**所有平台都是 `~/.config/AutoPaper/`**（`~` 就是你的用户目录）
 
-- Windows：`%APPDATA%\AutoPaper\config.yaml`
-- Linux / macOS：`~/.config/AutoPaper/config.yaml`
+| 平台 | 实际路径 |
+| --- | --- |
+| Windows | `C:\Users\<你>\.config\AutoPaper\config.yaml` |
+| Linux | `/home/<你>/.config/AutoPaper/config.yaml` |
+| macOS | `/Users/<你>/.config/AutoPaper/config.yaml` |
+
+三个平台路径格式完全一致，文档和命令都不用分平台写。Windows 上**刻意没有用** `%APPDATA%`，就是为了这个统一。
+
+Linux / macOS 上如果设了 `XDG_CONFIG_HOME`，会跟着它走（`$XDG_CONFIG_HOME/AutoPaper/`）——这是 XDG 规范的要求。没设就是 `~/.config/AutoPaper/`。
 
 查找顺序：`--config` 指定的路径 → 当前目录下的 `config.yaml` → 上面那个用户配置目录。
 
@@ -201,8 +208,8 @@ range: [1, 2, 3, 4, 5]        # 五天一轮，周末不动（配合 default 或
 
 ```
 $ autopaper check
-配置文件   C:\Users\me\AppData\Roaming\AutoPaper\config.yaml
-壁纸目录   C:\Users\me\AppData\Roaming\AutoPaper\wallpapers
+配置文件   C:\Users\me\.config\AutoPaper\config.yaml
+壁纸目录   C:\Users\me\.config\AutoPaper\wallpapers
 循环       [1, 2, 3, 4, 5, 6, 7]，起点 0001-01-01（周一），长度 7 天
 填充样式   Fill
 
@@ -241,7 +248,7 @@ autopaper preview          # 今天选中了哪张
 autopaper check            # 有没有文件缺失或者命名写错
 ```
 
-再看日志：`%APPDATA%\AutoPaper\autopaper.log`。
+再看日志：`~/.config/AutoPaper/autopaper.log`（Windows 上是 `C:\Users\<你>\.config\AutoPaper\autopaper.log`）。
 
 **开机没有自动换？**
 
@@ -310,7 +317,7 @@ dotnet publish src/AutoPaper -c Release -r win-x64 --self-contained true \
 
 ## CI / CD
 
-- **CI**（`.github/workflows/ci.yml`）：`ubuntu-latest` 和 `windows-latest` 各跑一遍单元测试，然后两个平台**共用同一份** `scripts/smoke.sh` 跑 23 项 CLI 冒烟检查（靠 `shell: bash`，Windows runner 自带 Git Bash）。另外有一个 Windows 任务逐个格式实测 `bmp` / `png` / `jpg` / `gif` / `tif` 到底能不能真的设成壁纸。
+- **CI**（`.github/workflows/ci.yml`）：`ubuntu-latest` 和 `windows-latest` 各跑一遍单元测试，然后两个平台**共用同一份** `scripts/smoke.sh` 跑 25 项 CLI 冒烟检查（靠 `shell: bash`，Windows runner 自带 Git Bash）。另外有一个 Windows 任务逐个格式实测 `bmp` / `png` / `jpg` / `gif` / `tif` 到底能不能真的设成壁纸。
 - **CD**（`.github/workflows/release.yml`）：推 `v*` 标签时，在 `windows-latest` 上构建自包含和 AOT 两个版本，**发之前先跑一遍确认 exe 能用**，然后发到 GitHub Release。
 
 发版：
@@ -325,6 +332,7 @@ git push origin v1.0.0
 ## 设计取舍
 
 - **不做规则引擎。** 文件名就是规则。想加"每月第一个周一"这类玩法的话，这个工具不是为你准备的——那样迟早会变成一个只有作者看得懂的配置文件。
+- **配置目录三个平台统一是 `~/.config/AutoPaper`。** Windows 上没用 `%APPDATA%`，虽然那才是 Windows 的正统位置——换来的是文档、配置、命令都只写一份，不用到处分平台。也没用 `SpecialFolder.ApplicationData` 图省事：.NET 8 起它在 macOS 上返回 `~/Library/Application Support`，用它就凑不出统一路径。
 - **YAML 只用节点树解析，不用反射反序列化。** 为的是让裁剪和 AOT 都能用（YamlDotNet 的表示模型层零反射），顺便换来了精确到行号的报错。
 - **`apply` 不会自动创建配置。** 后台任务静默地生成文件是坏事，找不到配置就直接报错让你先 `init`。
 - **`DayOfWeek` 的坑。** .NET 里 `DayOfWeek.Sunday == 0`，直接强转会把"1=周一"搞错一天。这里用 `0001-01-01`（正好是周一）当默认锚点，避开硬编码星期几。
