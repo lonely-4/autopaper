@@ -76,7 +76,11 @@ wallpapers/
 
 同一张图想给几天用，不用复制文件——改 `range` 就行（见下）。
 
-**扩展名**支持 `bmp` `dib` `gif` `jpg` `jpeg` `jpe` `jfif` `png` `tif` `tiff`，另外 `webp` `avif` `heic` `heif` 也认，但**能不能设成壁纸取决于系统装没装对应编解码器**，`check` 会提醒你。
+**扩展名**支持 `bmp` `dib` `gif` `jpg` `jpeg` `jpe` `jfif` `png` `tif` `tiff`。
+
+其中 `bmp` / `png` / `jpg` / `gif` / `tif` 这五种已经在真实的 Windows 上实测确认能设成壁纸——不是查文档猜的，是 CI 每次都会重跑一遍的真实验证（`scripts/wallpaper-matrix.ps1`：逐个格式设置，再读回注册表确认真的改到了）。
+
+`webp` / `avif` / `heic` / `heif` 也认，但**能不能设成壁纸取决于系统装没装对应编解码器**，`check` 会提醒你。
 
 **同一个槽位放了多个扩展名**（比如 `3.jpg` 和 `03.png`），按扩展名字母序取第一个。注意字母序意味着 `.bmp` 排在 `.jpg` 前面，所以 `3.bmp` 会赢过 `3.jpg`——而 bmp 体积通常是 jpg 的十倍，别不小心留着。
 
@@ -299,8 +303,8 @@ dotnet publish src/AutoPaper -c Release -r win-x64 --self-contained true \
 
 ## CI / CD
 
-- **CI**（`.github/workflows/ci.yml`）：`ubuntu-latest` 和 `windows-latest` 各跑一遍单元测试，然后两个平台共用同一份 `scripts/smoke.sh` 跑 CLI 冒烟测试。另外有一个 Windows 任务实测 `bmp` / `png` / `jpg` / `gif` / `tif` 到底哪些格式能真的设成壁纸（`scripts/wallpaper-matrix.ps1`）。
-- **CD**（`.github/workflows/release.yml`）：推 `v*` 标签时，在 `windows-latest` 上构建自包含和 AOT 两个版本，跑一遍确认 exe 能用，然后发到 GitHub Release。
+- **CI**（`.github/workflows/ci.yml`）：`ubuntu-latest` 和 `windows-latest` 各跑一遍单元测试，然后两个平台**共用同一份** `scripts/smoke.sh` 跑 23 项 CLI 冒烟检查（靠 `shell: bash`，Windows runner 自带 Git Bash）。另外有一个 Windows 任务逐个格式实测 `bmp` / `png` / `jpg` / `gif` / `tif` 到底能不能真的设成壁纸。
+- **CD**（`.github/workflows/release.yml`）：推 `v*` 标签时，在 `windows-latest` 上构建自包含和 AOT 两个版本，**发之前先跑一遍确认 exe 能用**，然后发到 GitHub Release。
 
 发版：
 

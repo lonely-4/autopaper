@@ -34,9 +34,9 @@ jobs:
     continue-on-error: ${{ matrix.optional }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
 
@@ -67,7 +67,7 @@ jobs:
           "$exe" version
           "$exe" check --config examples/config.yaml
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.flavor }}
           path: dist/${{ matrix.flavor }}/autopaper.exe
@@ -83,10 +83,10 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # aot 那一份可能因为 continue-on-error 而缺失，这里按实际存在的目录打包
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: artifacts
 
